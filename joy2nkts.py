@@ -68,11 +68,6 @@ def GetMousePos():
 	windll.user32.GetCursorPos(byref(pt))
 	return pt
 
-up = 0xC8
-down = 0xD0
-left = 0xCB
-right = 0xCD
-
 A = 0x1E
 B = 0x30
 C = 0x2E
@@ -99,7 +94,6 @@ W = 0x11
 X = 0x2D
 Y = 0x15
 Z = 0x2C
-
 n1 = 0x02
 n2 = 0x03
 n3 = 0x04
@@ -110,17 +104,20 @@ n7 = 0x08
 n8 = 0x09
 n9 = 0x0A
 n0 = 0x0B
-space = 0x39
-fslash = 0x35
+
 enter = 0x1C
-semicolon = 0x27
-lshift = 0x2A
+space = 0x39
+tab = 0x0F
+
+up = 0xC8
+down = 0xD0
+left = 0xCB
+right = 0xCD
 pageup = 0xC9
 pagedown = 0xD1
 
 F1 = 0x3B
 F2 = 0x3C
-tab = 0x0F
 
 pygame.init()
 pygame.joystick.init()
@@ -290,12 +287,17 @@ while 1:
 					mouse_vel_y2 = mouse_vel_coef2 * j.get_axis(3)
 				else:
 					mouse_vel_y2 = 0
-			## space/tab
+			## space/tab/enter
 			if e.axis == 2:
 				if prevTrigger <= -0.9 and j.get_axis(2) > -0.9:
-					PressKey(tab)
-					time.sleep(0.1)
-					ReleaseKey(tab)
+					if isSet:
+						PressKey(tab)
+						time.sleep(0.1)
+						ReleaseKey(tab)
+					else:
+						PressKey(enter)
+						time.sleep(0.1)
+						ReleaseKey(enter)
 				if prevTrigger >= 0.9 and j.get_axis(2) < 0.9:
 					PressKey(space)
 					time.sleep(0.1)
