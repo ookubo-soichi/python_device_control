@@ -5,6 +5,7 @@ import pygame
 import pygame.joystick
 from pygame.locals import *
 import pyautogui as pa
+from scipy.interpolate import interp1d
 
 import win32gui
 import ctypes
@@ -85,10 +86,10 @@ def SetMousePosClick(x,y):
 	hwnd = ctypes.windll.user32.GetForegroundWindow()
 	l, t, r, b = win32gui.GetWindowRect(hwnd)
 	SetMousePos(int(l+rx*(r-l)), int(t+ry*(b-t)))
-	ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0,0)
+	ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)
 
 def SetMousePosClickOFF():
-	ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0,0)
+	ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)
 
 wp = {
 	'x0':0,
@@ -104,6 +105,7 @@ wp = {
 	'xsystem':1195,
     'xlog':1260,
     'ylog':695,
+	'xvoice':1215,
 }
 
 btn_up = pygame.JOYBUTTONUP
@@ -111,65 +113,19 @@ btn_dw = pygame.JOYBUTTONDOWN
 hat_mt = pygame.JOYHATMOTION
 axs_mt = pygame.JOYAXISMOTION
 
-A = 0x1E
-B = 0x30
-C = 0x2E
-D = 0x20
-E = 0x12
-F = 0x21
-G = 0x22
-H = 0x23
-I = 0x17
-J = 0x24
-K = 0x25
-L = 0x26
-M = 0x32
-N = 0x31
-O = 0x18
-P = 0x19
-Q = 0x10
-R = 0x13
-S = 0x1F
-T = 0x14
-U = 0x16
-V = 0x2F
-W = 0x11
-X = 0x2D
-Y = 0x15
-Z = 0x2C
-n1 = 0x02
-n2 = 0x03
-n3 = 0x04
-n4 = 0x05
-n5 = 0x06
-n6 = 0x07
-n7 = 0x08
-n8 = 0x09
-n9 = 0x0A
-n0 = 0x0B
-enter = 0x1C
-space = 0x39
-tab = 0x0F
-up = 0xC8
-down = 0xD0
-left = 0xCB
-right = 0xCD
-pageup = 0xC9
-pagedown = 0xD1
-Shift = 0x2A
-Ctrl = 0x1D
-F1 = 0x3B
-F2 = 0x3C
-F3 = 0x3D
-F4 = 0x3E
-F5 = 0x3F
-F6 = 0x40
-F7 = 0x41
-F8 = 0x42
-F9 = 0x43
-F10 = 0x44
-F11 = 0x57
-F12 = 0x58
+A = 0x1E;B = 0x30;C = 0x2E;D = 0x20;E = 0x12
+F = 0x21;G = 0x22;H = 0x23;I = 0x17;J = 0x24
+K = 0x25;L = 0x26;M = 0x32;N = 0x31;O = 0x18
+P = 0x19;Q = 0x10;R = 0x13;S = 0x1F;T = 0x14
+U = 0x16;V = 0x2F;W = 0x11;X = 0x2D;Y = 0x15;Z = 0x2C
+n1 = 0x02;n2 = 0x03;n3 = 0x04;n4 = 0x05;n5 = 0x06
+n6 = 0x07;n7 = 0x08;n8 = 0x09;n9 = 0x0A;n0 = 0x0B
+enter = 0x1C;space = 0x39;tab = 0x0F
+up = 0xC8;down = 0xD0;left = 0xCB;right = 0xCD
+pageup = 0xC9;pagedown = 0xD1;Shift = 0x2A;Ctrl = 0x1D
+F1 = 0x3B;F2 = 0x3C;F3 = 0x3D;F4 = 0x3E;F5 = 0x3F
+F6 = 0x40;F7 = 0x41;F8 = 0x42;F9 = 0x43;F10 = 0x44
+F11 = 0x57;F12 = 0x58
 
 pygame.init()
 pygame.joystick.init()
@@ -178,27 +134,27 @@ j.init()
 print ('Joystick Name   : ' + j.get_name())
 print ('Joystick Number : ' + str(j.get_numbuttons()))
 
-mouse_vel_x1 = 0
-mouse_vel_y1 = 0
-mouse_vel_x2 = 0
-mouse_vel_y2 = 0
-mouse_vel_coef1 = 10
-mouse_vel_coef2 = 5
-up_hold = False
-down_hold = False
-left_hold = False
-right_hold = False
-space_hold = False
-tab_hold = False
-enter_hold = False
+mouse_vel_x1 = 0;mouse_vel_y1 = 0
+mouse_vel_x2 = 0;mouse_vel_y2 = 0
+mouse_vel_coef1 = 10;mouse_vel_coef2 = 5
+up_hold = False;down_hold = False
+left_hold = False;right_hold = False
+trigger2_hold = False;prev_trigger2 = 0.0
+trigger5 = 0
+trigger5_accumulator = 0
+prev_trigger5_accumulator = 0
+scroll_counter = 0
+scroll_counter_for_auto = 0
+scroll_counter_interval = 0
+scroll_counter_interval_mem = 0
+scroll_vel_x = [0.0, 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0]
+scroll_vel_y = [0.0, 0.05, 0.06, 0.07, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.5]
+scroll_vel_f = interp1d(scroll_vel_x, scroll_vel_y)
 isSet = False
-prevTrigger2 = 0.0
-prevTrigger5 = 0.0
-going = True
 
 while 1:
 	for e in pygame.event.get():
-		print ('event : ' + str(e))
+		#print ('event : ' + str(e))
 		if e.type == btn_up or e.type == btn_dw:
 			print (str(e.type)+' : ' + str(e.button))
 		# change isSet
@@ -209,10 +165,13 @@ while 1:
 		if e.type == btn_up:
 			if e.button == 4:
 				isSet = False
-		# message log
+		# message log/voice
 		if e.type == btn_dw:
 			if e.button == 5:
-				SetMousePosClick('xlog','ylog')
+				if isSet:
+					SetMousePosClick('xvoice','ylog')
+				else:
+					SetMousePosClick('xlog','ylog')
 		if e.type == btn_up:
 			if e.button == 5:
 				SetMousePosClickOFF()
@@ -222,26 +181,26 @@ while 1:
 				if isSet:
 					SetMousePosClick('xload','yauto')
 				else:
-					ctypes.windll.user32.mouse_event(0x0008, 0, 0, 0,0)
+					ctypes.windll.user32.mouse_event(0x0008, 0, 0, 0, 0)
 		if e.type == btn_up:
 			if e.button == 1:
 				if isSet:
 					SetMousePosClickOFF()
 				else:
-					ctypes.windll.user32.mouse_event(0x0010, 0, 0, 0,0)
+					ctypes.windll.user32.mouse_event(0x0010, 0, 0, 0, 0)
 		# left click/quick save
 		if e.type == btn_dw:
 			if e.button == 2:
 				if isSet:
 					SetMousePosClick('xsave','yauto')
 				else:
-					ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0,0)
+					ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)
 		if e.type == btn_up:
 			if e.button == 2:
 				if isSet:
 					SetMousePosClickOFF()
 				else:
-					ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0,0)
+					ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)
 		# volume up/save
 		if e.type == btn_dw:
 			if e.button == 3:
@@ -294,6 +253,7 @@ while 1:
 					SetMousePosClickOFF()
 				else:
 					pass
+		# up/down/left/right
 		if e.type == hat_mt:
 			if e.value[1] == 1:
 				PressKey(up)
@@ -321,6 +281,7 @@ while 1:
 					ReleaseKey(left)
 					left_hold = False
 			print (str(e.type)+' : '+str(e.value[0])+' : '+str(e.value[1]))
+		# mouce cursor
 		if e.type == axs_mt:
 			if e.axis == 0 or e.axis == 1:
 				if abs(j.get_axis(0)) >= 0.1:
@@ -346,31 +307,48 @@ while 1:
 					mouse_vel_y2 = mouse_vel_coef2 * j.get_axis(4)
 				else:
 					mouse_vel_y2 = 0
-			# space/tab/enter
-			if e.axis == 2 or e.axis == 5:
-				if prevTrigger5 < 0.9 and j.get_axis(5) >= 0.9:
-					if isSet:
-						#SetMousePosClick('xsystem','yauto')
-						tab_hold = True
-					else:
-						#SetMousePosClick('xvoice','yauto')
-						enter_hold = True
-				if tab_hold:
-					#SetMousePosClickOFF()
-					tab_hold = False
-				if enter_hold:
-					#SetMousePosClickOFF()
-					enter_hold = False
-				if prevTrigger2 < 0.9 and j.get_axis(2) >= 0.9:
+			# scroll
+			if e.axis == 5:
+				trigger5 = j.get_axis(5) + 1.0
+				if trigger5 <= 0.0:
+					trigger5 = 0.0
+				else:
+					trigger5 -= 0.0
+					trigger5 /= 2.0
+				trigger5 = max(min(trigger5, 1.0), 0.0)
+			# space
+			if e.axis == 2:
+				if prev_trigger2 < 0.9 and j.get_axis(2) >= 0.9:
 					#SetMousePosClick('xhide','yauto')
-					space_hold = True
-				if space_hold:
+					trigger2_hold = True
+				if trigger2_hold:
 					#SetMousePosClickOFF()
-					space_hold = False
-				prevTrigger2 = j.get_axis(2)
-				prevTrigger5 = j.get_axis(5)
+					trigger2_hold = False
+				prev_trigger2 = j.get_axis(2)
 			print (str(e.type)+' : '+str(e.axis)+' : '+str(e.value))
 			print (str(j.get_axis(0))+' : '+str(j.get_axis(1))+' : '+str(j.get_axis(3))+' : '+str(j.get_axis(2))+' : '+str(j.get_axis(4))+' : '+str(j.get_axis(5)))
 	base_pos = GetMousePos()
 	SetMousePos(int(base_pos.x + mouse_vel_x1 + mouse_vel_x2), int(base_pos.y + mouse_vel_y1 + mouse_vel_y2))
+	trigger5_accumulator += scroll_vel_f(trigger5)
+	#print ("{:.3f}".format(trigger5), "{:.3f}".format(scroll_vel_f(trigger5)), "{:.3f}".format(trigger5_accumulator))
+	scroll_counter += 1
+	scroll_counter_for_auto += 1
+	if trigger5_accumulator >= 10:
+		trigger5_accumulator = 0
+	if trigger5 <= 1e-6:
+		trigger5_accumulator = 0
+		scroll_counter = 0
+		scroll_counter_interval = 0
+	if int(trigger5_accumulator) < int(prev_trigger5_accumulator):
+		ctypes.windll.user32.mouse_event(0x0800, 0, 0, -1, 0)
+		scroll_counter_interval = scroll_counter
+		scroll_counter = 0
+	if isSet:
+		scroll_counter_interval_mem = scroll_counter_interval
+	if scroll_counter_for_auto >= scroll_counter_interval_mem and scroll_counter_interval_mem > 0:
+		ctypes.windll.user32.mouse_event(0x0800, 0, 0, -1, 0)
+		scroll_counter_for_auto = 0
+	if scroll_counter_for_auto >= 1000:
+		scroll_counter_for_auto = 0
+	prev_trigger5_accumulator = trigger5_accumulator
 	time.sleep(0.01)
