@@ -6,15 +6,12 @@ import pygame.joystick
 from pygame.locals import *
 import pyautogui as pa
 from scipy.interpolate import interp1d
-
 import win32gui
 import ctypes
 from ctypes import windll, Structure, c_long, byref
 
 hllDll = ctypes.WinDLL ("User32.dll")
-
 SendInput = ctypes.windll.user32.SendInput
-
 PUL = ctypes.POINTER(ctypes.c_ulong)
 
 class KeyBdInput(ctypes.Structure):
@@ -52,15 +49,15 @@ class Point(Structure):
 def PressKey(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
-    ii_.ki = KeyBdInput( 0, hexKeyCode, 0x0008, 0, ctypes.pointer(extra) )
-    x = Input( ctypes.c_ulong(1), ii_ )
+    ii_.ki = KeyBdInput(0, hexKeyCode, 0x0008, 0, ctypes.pointer(extra))
+    x = Input(ctypes.c_ulong(1), ii_)
     ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
 def ReleaseKey(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
-    ii_.ki = KeyBdInput( 0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.pointer(extra) )
-    x = Input( ctypes.c_ulong(1), ii_ )
+    ii_.ki = KeyBdInput(0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.pointer(extra))
+    x = Input(ctypes.c_ulong(1), ii_)
     ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
 def SetMousePos(x, y):
@@ -80,7 +77,7 @@ def debug():
 	windll.user32.GetCursorPos(byref(pt))
 	print (pt.x, pt.y)
 
-def SetMousePosClick(x,y):
+def SetMousePosClick(x, y):
 	rx = (wp[x]-wp['x0'])/(wp['x1']-wp['x0'])
 	ry = (wp[y]-wp['y0'])/(wp['y1']-wp['y0'])
 	hwnd = ctypes.windll.user32.GetForegroundWindow()
@@ -90,6 +87,69 @@ def SetMousePosClick(x,y):
 
 def SetMousePosClickOFF():
 	ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)
+
+def SendClickKeyEvent(event_type, x, y, key):
+	if event_type  == btn_dw:
+		if key[0] == False:
+			SetMousePosClick(x, y)
+		else:
+			if key[0] == 'volumeup':
+				pa.press('volumeup')
+			elif key[0] == 'volumedown':
+				pa.press('volumedown')
+			elif key[0] == 'Alt+F4':
+				pa.hotkey('alt', 'f4')
+			elif key[0] == 'Alt+Enter':
+				pa.hotkey('alt', 'enter')
+			else:
+				for _k in key:
+					PressKey(_k)
+	elif event_type  == btn_up:
+		if key[0] == False:
+			SetMousePosClickOFF()
+		else:
+			if key[0] in ['volumeup', 'volumedown', 'Alt+F4', 'Alt+Enter']:
+				pass
+			else:
+				for _k in key:
+					ReleaseKey(_k)
+
+def LeftClick(event_type):
+	if event_type  == btn_dw:
+		ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)
+	elif event_type  == btn_up:
+		ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)
+
+def RightClick(event_type):
+	if event_type  == btn_dw:
+		ctypes.windll.user32.mouse_event(0x0008, 0, 0, 0, 0)
+	elif event_type  == btn_up:
+		ctypes.windll.user32.mouse_event(0x0010, 0, 0, 0, 0)
+
+def Log(event_type):
+	SendClickKeyEvent(event_type, 'xlog', 'ylog', [False])
+def Voice(event_type):
+	SendClickKeyEvent(event_type, 'xvoice', 'ylog', [False])
+def QuickLoad(event_type):
+	SendClickKeyEvent(event_type, 'xload','yauto', [False])
+def QuickSave(event_type):
+	SendClickKeyEvent(event_type, 'xsave','yauto', [False])
+def Load(event_type):
+	SendClickKeyEvent(event_type, 'xload','yauto', [False])
+def Save(event_type):
+	SendClickKeyEvent(event_type, 'xsave','yauto', [False])
+def Auto(event_type):
+	SendClickKeyEvent(event_type, 'xauto','yauto', [False])
+def Skip(event_type):
+	SendClickKeyEvent(event_type, 'xskip','yauto', [False])
+def FullScreen(event_type):
+	SendClickKeyEvent(event_type, False, False, ['Alt+Enter'])
+def VolumeUp(event_type):
+	SendClickKeyEvent(event_type, False, False, ['volumeup'])
+def VolumeDown(event_type):
+	SendClickKeyEvent(event_type, False, False, ['volumedown'])
+def Close(event_type):
+	SendClickKeyEvent(event_type, False, False, ['Alt+F4'])
 
 wp = {
 	'x0':0,
@@ -134,125 +194,77 @@ j.init()
 print ('Joystick Name   : ' + j.get_name())
 print ('Joystick Number : ' + str(j.get_numbuttons()))
 
-mouse_vel_x1 = 0;mouse_vel_y1 = 0
-mouse_vel_x2 = 0;mouse_vel_y2 = 0
-mouse_vel_coef1 = 10;mouse_vel_coef2 = 5
-up_hold = False;down_hold = False
-left_hold = False;right_hold = False
-trigger2_hold = False;prev_trigger2 = 0.0
-trigger5 = 0
-trigger5_accumulator = 0
-prev_trigger5_accumulator = 0
+mouse_vel_x1 = 0;mouse_vel_y1 = 0;mouse_vel_x2 = 0;mouse_vel_y2 = 0
+mouse_vel_coef_l1 = 10;mouse_vel_coef_l2 = 5;mouse_vel_coef_r1 = 5;mouse_vel_coef_r2 = 2
+up_hold = False;down_hold = False;left_hold = False;right_hold = False
+trigger2 = 0;trigger5 = 0
 scroll_counter = 0
+scroll_counter_thresh = 0
+scroll_counter_thresh_mem = 0
 scroll_counter_for_auto = 0
-scroll_counter_interval = 0
-scroll_counter_interval_mem = 0
-scroll_vel_x = [0.0, 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0]
-scroll_vel_y = [0.0, 0.05, 0.06, 0.07, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.5]
-scroll_vel_f = interp1d(scroll_vel_x, scroll_vel_y)
+scroll_counter_thresh_x = [0.0,  0.05, 0.1, 0.15, 0.2,  0.4,  0.6,  0.8,  1.0,  1.2,  1.4,  1.6, 1.7, 1.8, 1.9, 2.0]
+scroll_counter_thresh_y = [250,  240,  230, 220,  210,  200,  180,  160,  140,  120,  100,  80,  60,  50,  40,  30 ]
+scroll_counter_thresh_f = interp1d(scroll_counter_thresh_x, scroll_counter_thresh_y)
+scroll_up = False
 isSet = False
 
 while 1:
 	for e in pygame.event.get():
 		#print ('event : ' + str(e))
 		if e.type == btn_up or e.type == btn_dw:
-			print (str(e.type)+' : ' + str(e.button))
+			pass
+			#print (str(e.type)+' : ' + str(e.button))
 		# change isSet
 		if e.type == btn_dw:
 			if e.button == 4:
 				isSet = True
-				debug()
+				#debug()
 		if e.type == btn_up:
 			if e.button == 4:
 				isSet = False
-		# message log/voice
-		if e.type == btn_dw:
+		if e.type in [btn_up, btn_dw]:
+			# message log/voice
 			if e.button == 5:
 				if isSet:
-					SetMousePosClick('xvoice','ylog')
+					Voice(e.type)
 				else:
-					SetMousePosClick('xlog','ylog')
-		if e.type == btn_up:
-			if e.button == 5:
-				SetMousePosClickOFF()
-		# right click/quick load
-		if e.type == btn_dw:
+					Log(e.type)
+			# right click/quick load
 			if e.button == 1:
 				if isSet:
-					SetMousePosClick('xload','yauto')
+					QuickLoad(e.type)
 				else:
-					ctypes.windll.user32.mouse_event(0x0008, 0, 0, 0, 0)
-		if e.type == btn_up:
-			if e.button == 1:
-				if isSet:
-					SetMousePosClickOFF()
-				else:
-					ctypes.windll.user32.mouse_event(0x0010, 0, 0, 0, 0)
-		# left click/quick save
-		if e.type == btn_dw:
+					RightClick(e.type)
+			# left click/quick save
 			if e.button == 2:
 				if isSet:
-					SetMousePosClick('xsave','yauto')
+					QuickSave(e.type)
 				else:
-					ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)
-		if e.type == btn_up:
-			if e.button == 2:
-				if isSet:
-					SetMousePosClickOFF()
-				else:
-					ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)
-		# volume up/save
-		if e.type == btn_dw:
+					LeftClick(e.type)
+			# volume up/save
 			if e.button == 3:
 				if isSet:
-					SetMousePosClick('xsave','yauto')
+					Save(e.type)
 				else:
-					pa.press('volumeup')
-		if e.type == btn_up:
-			if e.button == 3:
-				if isSet:
-					SetMousePosClickOFF()
-				else:
-					pass
-		# volume down/load
-		if e.type == btn_dw:
+					VolumeUp(e.type)
+			# volume down/load
 			if e.button == 0:
 				if isSet:
-					SetMousePosClick('xload','yauto')
+					Load(e.type)
 				else:
-					pa.press('volumedown')
-		if e.type == btn_up:
-			if e.button == 0:
-				if isSet:
-					SetMousePosClickOFF()
-				else:
-					pass
-		# full screen/skip
-		if e.type == btn_dw:
+					VolumeDown(e.type)
+			# full screen/skip
 			if e.button == 6:
 				if isSet:
-					SetMousePosClick('xskip','yauto')
+					Skip(e.type)
 				else:
-					pa.hotkey('alt', 'enter')
-		if e.type == btn_up:
-			if e.button == 6:
-				if isSet:
-					SetMousePosClickOFF()
-				else:
-					pass
-		# auto/close
-		if e.type == btn_dw:
+					FullScreen(e.type)
+			# auto/close
 			if e.button == 7:
 				if isSet:
-					pa.hotkey('alt', 'f4')
+					Close(e.type)
 				else:
-					SetMousePosClick('xauto','yauto')
-		if e.type == btn_up:
-			if e.button == 7:
-				if isSet:
-					SetMousePosClickOFF()
-				else:
-					pass
+					Auto(e.type)
 		# up/down/left/right
 		if e.type == hat_mt:
 			if e.value[1] == 1:
@@ -286,69 +298,77 @@ while 1:
 			if e.axis == 0 or e.axis == 1:
 				if abs(j.get_axis(0)) >= 0.1:
 					if isSet:
-						mouse_vel_x1 = mouse_vel_coef2 * j.get_axis(0)
+						mouse_vel_x1 = mouse_vel_coef_l2 * j.get_axis(0)
 					else:
-						mouse_vel_x1 = mouse_vel_coef1 * j.get_axis(0)
+						mouse_vel_x1 = mouse_vel_coef_l1 * j.get_axis(0)
 				else:
 					mouse_vel_x1 = 0
 				if abs(j.get_axis(1)) >= 0.1:
 					if isSet:
-						mouse_vel_y1 = mouse_vel_coef1 * j.get_axis(1)
+						mouse_vel_y1 = mouse_vel_coef_l2 * j.get_axis(1)
 					else:
-						mouse_vel_y1 = mouse_vel_coef2 * j.get_axis(1)
+						mouse_vel_y1 = mouse_vel_coef_l1 * j.get_axis(1)
 				else:
 					mouse_vel_y1 = 0
 			if e.axis == 3 or e.axis == 4:
 				if abs(j.get_axis(3)) >= 0.1:
-					mouse_vel_x2 = mouse_vel_coef2 * j.get_axis(3)
+					if isSet:
+						mouse_vel_x2 = mouse_vel_coef_r2 * j.get_axis(3)
+					else:
+						mouse_vel_x2 = mouse_vel_coef_r1 * j.get_axis(3)
 				else:
 					mouse_vel_x2 = 0
 				if abs(j.get_axis(4)) >= 0.1:
-					mouse_vel_y2 = mouse_vel_coef2 * j.get_axis(4)
+					if isSet:
+						mouse_vel_y2 = mouse_vel_coef_r2 * j.get_axis(4)
+					else:
+						mouse_vel_y2 = mouse_vel_coef_r1 * j.get_axis(4)
 				else:
 					mouse_vel_y2 = 0
-			# scroll
+			# scroll up
+			if e.axis == 2:
+				trigger2 = j.get_axis(2) + 1.0
+				trigger2 = max(min(trigger2, 2.0), 0.0)
+			# scroll down
 			if e.axis == 5:
 				trigger5 = j.get_axis(5) + 1.0
-				if trigger5 <= 0.0:
-					trigger5 = 0.0
-				else:
-					trigger5 -= 0.0
-					trigger5 /= 2.0
-				trigger5 = max(min(trigger5, 1.0), 0.0)
-			# space
-			if e.axis == 2:
-				if prev_trigger2 < 0.9 and j.get_axis(2) >= 0.9:
-					#SetMousePosClick('xhide','yauto')
-					trigger2_hold = True
-				if trigger2_hold:
-					#SetMousePosClickOFF()
-					trigger2_hold = False
-				prev_trigger2 = j.get_axis(2)
-			print (str(e.type)+' : '+str(e.axis)+' : '+str(e.value))
-			print (str(j.get_axis(0))+' : '+str(j.get_axis(1))+' : '+str(j.get_axis(3))+' : '+str(j.get_axis(2))+' : '+str(j.get_axis(4))+' : '+str(j.get_axis(5)))
+				trigger5 = max(min(trigger5, 2.0), 0.0)
+			#print (str(e.type)+' : '+str(e.axis)+' : '+str(e.value))
+			#print (str(j.get_axis(0))+' : '+str(j.get_axis(1))+' : '+str(j.get_axis(3))+' : '+str(j.get_axis(2))+' : '+str(j.get_axis(4))+' : '+str(j.get_axis(5)))
 	base_pos = GetMousePos()
 	SetMousePos(int(base_pos.x + mouse_vel_x1 + mouse_vel_x2), int(base_pos.y + mouse_vel_y1 + mouse_vel_y2))
-	trigger5_accumulator += scroll_vel_f(trigger5)
-	#print ("{:.3f}".format(trigger5), "{:.3f}".format(scroll_vel_f(trigger5)), "{:.3f}".format(trigger5_accumulator))
 	scroll_counter += 1
 	scroll_counter_for_auto += 1
-	if trigger5_accumulator >= 10:
-		trigger5_accumulator = 0
-	if trigger5 <= 1e-6:
-		trigger5_accumulator = 0
+	if trigger2 <= 1e-6 and trigger5 <= 1e-6:
 		scroll_counter = 0
-		scroll_counter_interval = 0
-	if int(trigger5_accumulator) < int(prev_trigger5_accumulator):
-		ctypes.windll.user32.mouse_event(0x0800, 0, 0, -1, 0)
-		scroll_counter_interval = scroll_counter
-		scroll_counter = 0
+	if trigger2 > trigger5:
+		scroll_counter_thresh = scroll_counter_thresh_f(trigger2)
+		if scroll_counter >= scroll_counter_thresh:
+			ctypes.windll.user32.mouse_event(0x0800, 0, 0, 1, 0)
+			scroll_counter = 0
+	else:
+		scroll_counter_thresh = scroll_counter_thresh_f(trigger5)
+		if scroll_counter >= scroll_counter_thresh:
+			ctypes.windll.user32.mouse_event(0x0800, 0, 0, -1, 0)
+			scroll_counter = 0
 	if isSet:
-		scroll_counter_interval_mem = scroll_counter_interval
-	if scroll_counter_for_auto >= scroll_counter_interval_mem and scroll_counter_interval_mem > 0:
-		ctypes.windll.user32.mouse_event(0x0800, 0, 0, -1, 0)
+		if trigger2 <= 1e-6 and trigger5 <= 1e-6:
+			scroll_counter_thresh_mem = -1
+		else:
+			scroll_counter_thresh_mem = scroll_counter_thresh
+			if trigger2 > trigger5:
+				scroll_up = True
+			else:
+				scroll_up = False
+	if scroll_counter_for_auto >= scroll_counter_thresh_mem and scroll_counter_thresh_mem > 0:
+		if scroll_up:
+			ctypes.windll.user32.mouse_event(0x0800, 0, 0, 1, 0)
+		else:
+			ctypes.windll.user32.mouse_event(0x0800, 0, 0, -1, 0)
 		scroll_counter_for_auto = 0
 	if scroll_counter_for_auto >= 1000:
 		scroll_counter_for_auto = 0
-	prev_trigger5_accumulator = trigger5_accumulator
+	#print (scroll_counter_thresh)
+	#print ("{:.3f}".format(trigger5), "{:.3f}".format(scroll_counter_thresh))
+	#print (scroll_counter_thresh_mem, scroll_counter_thresh, scroll_counter_for_auto)
 	time.sleep(0.01)
