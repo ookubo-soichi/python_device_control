@@ -132,7 +132,7 @@ def SetMousePosClickOFF():
 
 def SendClickKeyEvent(event_type, x, y, key):
 	if event_type  == btn_dw:
-		if key[0] == False:
+		if key[0] == False and x != False and y != False:
 			SetMousePosClick(x, y)
 		else:
 			if key[0] == 'volumeup':
@@ -147,7 +147,7 @@ def SendClickKeyEvent(event_type, x, y, key):
 				for _k in key:
 					PressKey(_k)
 	elif event_type  == btn_up:
-		if key[0] == False:
+		if key[0] == False and x != False and y != False:
 			SetMousePosClickOFF()
 		else:
 			if key[0] in ['volumeup', 'volumedown', 'Alt+F4', 'Alt+Enter']:
