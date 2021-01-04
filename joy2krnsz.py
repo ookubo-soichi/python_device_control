@@ -10,6 +10,48 @@ import win32gui
 import ctypes
 from ctypes import windll, Structure, c_long, byref
 
+wp = {
+	'x0':0,
+	'x1':1280,
+	'y0':0,
+	'y1':745,
+	'xauto':1080,
+	'yauto':725,
+	'xskip':1040,
+	'xlog':745,
+	'xsave':1120,
+	'xload':1160,
+	'xsystem':1195,
+	'xlog':1260,
+	'ylog':695,
+	'xvoice':1215,
+}
+
+def Log(event_type):
+	SendClickKeyEvent(event_type, 'xlog', 'ylog', [False])
+def Voice(event_type):
+	SendClickKeyEvent(event_type, 'xvoice', 'ylog', [False])
+def QuickLoad(event_type):
+	SendClickKeyEvent(event_type, 'xload','yauto', [False])
+def QuickSave(event_type):
+	SendClickKeyEvent(event_type, 'xsave','yauto', [False])
+def Load(event_type):
+	SendClickKeyEvent(event_type, 'xload','yauto', [False])
+def Save(event_type):
+	SendClickKeyEvent(event_type, 'xsave','yauto', [False])
+def Auto(event_type):
+	SendClickKeyEvent(event_type, 'xauto','yauto', [False])
+def Skip(event_type):
+	SendClickKeyEvent(event_type, 'xskip','yauto', [False])
+def FullScreen(event_type):
+	SendClickKeyEvent(event_type, False, False, ['Alt+Enter'])
+def VolumeUp(event_type):
+	SendClickKeyEvent(event_type, False, False, ['volumeup'])
+def VolumeDown(event_type):
+	SendClickKeyEvent(event_type, False, False, ['volumedown'])
+def Close(event_type):
+	SendClickKeyEvent(event_type, False, False, ['Alt+F4'])
+
 hllDll = ctypes.WinDLL ("User32.dll")
 SendInput = ctypes.windll.user32.SendInput
 PUL = ctypes.POINTER(ctypes.c_ulong)
@@ -68,7 +110,7 @@ def GetMousePos():
 	windll.user32.GetCursorPos(byref(pt))
 	return pt
 
-def debug():
+def PrintMousePos():
 	hwnd = ctypes.windll.user32.GetForegroundWindow()
 	print (hwnd)
 	l, t, r, b = win32gui.GetWindowRect(hwnd)
@@ -126,48 +168,6 @@ def RightClick(event_type):
 	elif event_type  == btn_up:
 		ctypes.windll.user32.mouse_event(0x0010, 0, 0, 0, 0)
 
-def Log(event_type):
-	SendClickKeyEvent(event_type, 'xlog', 'ylog', [False])
-def Voice(event_type):
-	SendClickKeyEvent(event_type, 'xvoice', 'ylog', [False])
-def QuickLoad(event_type):
-	SendClickKeyEvent(event_type, 'xload','yauto', [False])
-def QuickSave(event_type):
-	SendClickKeyEvent(event_type, 'xsave','yauto', [False])
-def Load(event_type):
-	SendClickKeyEvent(event_type, 'xload','yauto', [False])
-def Save(event_type):
-	SendClickKeyEvent(event_type, 'xsave','yauto', [False])
-def Auto(event_type):
-	SendClickKeyEvent(event_type, 'xauto','yauto', [False])
-def Skip(event_type):
-	SendClickKeyEvent(event_type, 'xskip','yauto', [False])
-def FullScreen(event_type):
-	SendClickKeyEvent(event_type, False, False, ['Alt+Enter'])
-def VolumeUp(event_type):
-	SendClickKeyEvent(event_type, False, False, ['volumeup'])
-def VolumeDown(event_type):
-	SendClickKeyEvent(event_type, False, False, ['volumedown'])
-def Close(event_type):
-	SendClickKeyEvent(event_type, False, False, ['Alt+F4'])
-
-wp = {
-	'x0':0,
-	'x1':1280,
-	'y0':0,
-	'y1':745,
-	'xauto':1080,
-	'yauto':725,
-	'xskip':1040,
-	'xlog':745,
-	'xsave':1120,
-	'xload':1160,
-	'xsystem':1195,
-    'xlog':1260,
-    'ylog':695,
-	'xvoice':1215,
-}
-
 btn_up = pygame.JOYBUTTONUP
 btn_dw = pygame.JOYBUTTONDOWN
 hat_mt = pygame.JOYHATMOTION
@@ -206,67 +206,66 @@ scroll_counter_thresh_x = [0.0,  0.05, 0.1, 0.15, 0.2,  0.4,  0.6,  0.8,  1.0,  
 scroll_counter_thresh_y = [250,  240,  230, 220,  210,  200,  180,  160,  140,  120,  100,  80,  60,  50,  40,  30 ]
 scroll_counter_thresh_f = interp1d(scroll_counter_thresh_x, scroll_counter_thresh_y)
 scroll_up = False
-isSet = False
+toggle = False
 
 while 1:
 	for e in pygame.event.get():
 		#print ('event : ' + str(e))
-		if e.type == btn_up or e.type == btn_dw:
-			pass
-			#print (str(e.type)+' : ' + str(e.button))
-		# change isSet
+		# change toggle
 		if e.type == btn_dw:
 			if e.button == 4:
-				isSet = True
-				#debug()
+				toggle = True
+				#PrintMousePos()
 		if e.type == btn_up:
 			if e.button == 4:
-				isSet = False
+				toggle = False
 		if e.type in [btn_up, btn_dw]:
-			# message log/voice
-			if e.button == 5:
-				if isSet:
-					Voice(e.type)
+			#print (str(e.type)+' : ' + str(e.button))
+			# volume down/load
+			if e.button == 0:
+				if toggle:
+					Load(e.type)
 				else:
-					Log(e.type)
+					VolumeDown(e.type)
 			# right click/quick load
 			if e.button == 1:
-				if isSet:
+				if toggle:
 					QuickLoad(e.type)
 				else:
 					RightClick(e.type)
 			# left click/quick save
 			if e.button == 2:
-				if isSet:
+				if toggle:
 					QuickSave(e.type)
 				else:
 					LeftClick(e.type)
 			# volume up/save
 			if e.button == 3:
-				if isSet:
+				if toggle:
 					Save(e.type)
 				else:
 					VolumeUp(e.type)
-			# volume down/load
-			if e.button == 0:
-				if isSet:
-					Load(e.type)
+			# message log/voice
+			if e.button == 5:
+				if toggle:
+					Voice(e.type)
 				else:
-					VolumeDown(e.type)
+					Log(e.type)
 			# full screen/skip
 			if e.button == 6:
-				if isSet:
+				if toggle:
 					Skip(e.type)
 				else:
 					FullScreen(e.type)
 			# auto/close
 			if e.button == 7:
-				if isSet:
+				if toggle:
 					Close(e.type)
 				else:
 					Auto(e.type)
 		# up/down/left/right
 		if e.type == hat_mt:
+			#print (str(e.type)+' : '+str(e.value[0])+' : '+str(e.value[1]))
 			if e.value[1] == 1:
 				PressKey(up)
 				up_hold = True
@@ -292,19 +291,22 @@ while 1:
 				if left_hold:
 					ReleaseKey(left)
 					left_hold = False
-			print (str(e.type)+' : '+str(e.value[0])+' : '+str(e.value[1]))
-		# mouce cursor
+		# mouce cursor/scroll
 		if e.type == axs_mt:
+			#print (str(e.type)+' : '+str(e.axis)+' : '+str(e.value))
+			#print (str(j.get_axis(0))+' : '+str(j.get_axis(1))+' : '+str(j.get_axis(3))
+			#		+' : '+str(j.get_axis(2))+' : '+str(j.get_axis(4))+' : '+str(j.get_axis(5)))
+			# mouce cursor
 			if e.axis == 0 or e.axis == 1:
 				if abs(j.get_axis(0)) >= 0.1:
-					if isSet:
+					if toggle:
 						mouse_vel_x1 = mouse_vel_coef_l2 * j.get_axis(0)
 					else:
 						mouse_vel_x1 = mouse_vel_coef_l1 * j.get_axis(0)
 				else:
 					mouse_vel_x1 = 0
 				if abs(j.get_axis(1)) >= 0.1:
-					if isSet:
+					if toggle:
 						mouse_vel_y1 = mouse_vel_coef_l2 * j.get_axis(1)
 					else:
 						mouse_vel_y1 = mouse_vel_coef_l1 * j.get_axis(1)
@@ -312,14 +314,14 @@ while 1:
 					mouse_vel_y1 = 0
 			if e.axis == 3 or e.axis == 4:
 				if abs(j.get_axis(3)) >= 0.1:
-					if isSet:
+					if toggle:
 						mouse_vel_x2 = mouse_vel_coef_r2 * j.get_axis(3)
 					else:
 						mouse_vel_x2 = mouse_vel_coef_r1 * j.get_axis(3)
 				else:
 					mouse_vel_x2 = 0
 				if abs(j.get_axis(4)) >= 0.1:
-					if isSet:
+					if toggle:
 						mouse_vel_y2 = mouse_vel_coef_r2 * j.get_axis(4)
 					else:
 						mouse_vel_y2 = mouse_vel_coef_r1 * j.get_axis(4)
@@ -333,10 +335,10 @@ while 1:
 			if e.axis == 5:
 				trigger5 = j.get_axis(5) + 1.0
 				trigger5 = max(min(trigger5, 2.0), 0.0)
-			#print (str(e.type)+' : '+str(e.axis)+' : '+str(e.value))
-			#print (str(j.get_axis(0))+' : '+str(j.get_axis(1))+' : '+str(j.get_axis(3))+' : '+str(j.get_axis(2))+' : '+str(j.get_axis(4))+' : '+str(j.get_axis(5)))
+	# mouce cursor
 	base_pos = GetMousePos()
 	SetMousePos(int(base_pos.x + mouse_vel_x1 + mouse_vel_x2), int(base_pos.y + mouse_vel_y1 + mouse_vel_y2))
+	# scroll
 	scroll_counter += 1
 	scroll_counter_for_auto += 1
 	if trigger2 <= 1e-6 and trigger5 <= 1e-6:
@@ -351,7 +353,7 @@ while 1:
 		if scroll_counter >= scroll_counter_thresh:
 			ctypes.windll.user32.mouse_event(0x0800, 0, 0, -1, 0)
 			scroll_counter = 0
-	if isSet:
+	if toggle:
 		if trigger2 <= 1e-6 and trigger5 <= 1e-6:
 			scroll_counter_thresh_mem = -1
 		else:
