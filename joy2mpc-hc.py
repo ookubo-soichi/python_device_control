@@ -31,6 +31,10 @@ def OneMinAgo():
     pa.hotkey('ctrl', 'left')
 def TenSecAgo():
     pa.hotkey('alt', 'left')
+def ThreeSecLater():
+    pa.press('right')
+def ThreeSecAgo():
+    pa.press('left')
 def Faster(i):
     for _i in range(i):
         pa.press(']')
@@ -186,10 +190,35 @@ mouse_vel_x1 = 0;mouse_vel_y1 = 0;mouse_vel_x2 = 0;mouse_vel_y2 = 0
 mouse_vel_coef_l1 = 10;mouse_vel_coef_l2 = 5;mouse_vel_coef_r1 = 5;mouse_vel_coef_r2 = 2
 trigger2 = 0;trigger5 = 0;prevTrigger2 = 0.0;prevTrigger5 = 0.0
 toggle = False
+toggle2 = False
+
+class CycleSkip:
+	def __init__(self,skip_length):
+		self.skip_length = skip_length
+		self.cycle_index = 0
+	def cycle_reset(self):
+		self.cycle_index = 0
+	def cycle_skip(self, offset):
+		skip_time = self.skip_length[self.cycle_index]
+		if self.cycle_index == 0:
+			skip_time += 90
+		if self.cycle_index != len(self.skip_length) - 1
+			skip_time += offset
+		min = skip_time // 60
+		sec = int((skip_time % 60)/10)
+		for _i in range(min):
+			OneMinLater()
+		for _i in range(sec):
+			TenSecLater()
+		self.cycle_index += 1
+		if self.cycle_index >= len(self.skip_length):
+			self.cycle_index = 0
+
+cycle_skip = CycleSkip([60, 50, 80])
 
 while 1:
 	for e in pygame.event.get():
-		#print ('event : ' + str(e))
+		print ('event : ' + str(e))
 		# change toggle
 		if e.type == btn_dw:
 			if e.button == 4:
@@ -198,6 +227,13 @@ while 1:
 		if e.type == btn_up:
 			if e.button == 4:
 				toggle = False
+		# change toggle2
+		if e.type == btn_dw:
+			if e.button == 8:
+				toggle2 = True
+		if e.type == btn_up:
+			if e.button == 8:
+				toggle2 = False
 		if e.type in [btn_up, btn_dw]:
 			#print (str(e.type)+' : ' + str(e.button))
 			# volume down/load
@@ -207,17 +243,28 @@ while 1:
 			if e.button == 1:
 				if toggle:
 					Next(e.type)
+					cycle_skip.cycle_reset()
 				else:
 					RightClick(e.type)
 			# left click/prev
 			if e.button == 2:
 				if toggle:
 					Prev(e.type)
+					cycle_skip.cycle_reset()
 				else:
 					LeftClick(e.type)
 			# volume up
 			if e.button == 3:
 				VolumeUp(e.type)
+			# cycle skip
+			if e.button == 5:
+				if e.type == btn_dw:
+					if toggle:
+						cycle_skip.cycle_skip(-30)
+					elif toggle2:
+						cycle_skip.cycle_skip(30)
+					else:
+						cycle_skip.cycle_skip(0)
 			# full screen/x2.5
 			if e.button == 6:
 				if toggle:
