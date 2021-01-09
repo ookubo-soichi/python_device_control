@@ -120,8 +120,8 @@ def PrintMousePos():
 	print (pt.x, pt.y)
 
 def SetMousePosClick(x, y):
-	rx = (wp[x]-wp['x0'])/(wp['x1']-wp['x0'])
-	ry = (wp[y]-wp['y0'])/(wp['y1']-wp['y0'])
+	rx = (float(wp[x])-wp['x0'])/(wp['x1']-wp['x0'])
+	ry = (float(wp[y])-wp['y0'])/(wp['y1']-wp['y0'])
 	hwnd = ctypes.windll.user32.GetForegroundWindow()
 	l, t, r, b = win32gui.GetWindowRect(hwnd)
 	SetMousePos(int(l+rx*(r-l)), int(t+ry*(b-t)))
