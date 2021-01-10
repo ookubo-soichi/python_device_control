@@ -14,8 +14,10 @@ wp = {
 	'x1':3840,
 	'y0':0,
 	'y1':2160,
-	'xnext':3490,
-	'ynext':2085,
+	'xnext':3350,
+	'ynext':1830,
+	'xskip':3590,
+	'yskip':2080,
 }
 
 def FullScreen(event_type):
@@ -54,6 +56,10 @@ def PresetSpeed(event_type):
 	if event_type  == btn_dw:
 		pa.press('g')
 def Skip(event_type):
+	SendClickKeyEvent(event_type, 'xskip', 'yskip', [False])
+def OpEdSkip(event_type):
+	SendClickKeyEvent(event_type, False, False, [N])
+def ClickNext(event_type):
 	SendClickKeyEvent(event_type, 'xnext', 'ynext', [False])
 
 hllDll = ctypes.WinDLL ("User32.dll")
@@ -229,12 +235,18 @@ while 1:
 					Prev(e.type)
 				else:
 					LeftClick(e.type)
-			# volume up
+			# volume up/skip
 			if e.button == 3:
-				VolumeUp(e.type)
-			# next
+				if toggle:
+					Skip(e.type)
+				else:
+					VolumeUp(e.type)
+			# op ed skip/click next
 			if e.button == 5:
-				Skip(e.type)
+				if toggle:
+					ClickNext(e.type)
+				else:
+					OpEdSkip(e.type)
 			# full screen/x2.5
 			if e.button == 6:
 				if toggle:
